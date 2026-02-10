@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataScience Dashboard - Picard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        :root {
+            --primary: #6366f1;
+            --secondary: #a855f7;
+            --bg-dark: #0f172a;
+            --card-glass: rgba(255, 255, 255, 0.05);
+            --text-main: #f8fafc;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0;
+            overflow-x: hidden;
+            background: radial-gradient(circle at top right, #1e1b4b, #0f172a);
+        }
+
+        .navbar {
+            padding: 1.5rem 2rem;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 2rem;
+        }
+
+        .sidebar {
+            background: var(--card-glass);
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            height: fit-content;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-item {
+            padding: 0.8rem 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 0.8rem;
+            cursor: pointer;
+            transition: 0.3s;
+            color: #94a3b8;
+            font-weight: 600;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        select {
+            color: #ffffff !important;
+            background: #1e293b !important;
+            padding: 0.8rem;
+            border-radius: 0.8rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-weight: 600;
+            appearance: none;
+            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23FFFFFF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
+            background-repeat: no-repeat, repeat;
+            background-position: right .7em top 50%, 0 0;
+            background-size: .65em auto, 100%;
+            padding-right: 2.5em;
+        }
+
+        select option {
+            background-color: #1e293b;
+            color: #ffffff;
+        }
+
+        .card {
+            background: var(--card-glass);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(5px);
+        }
+
+        h1,
+        h2,
+        h3 {
+            margin-top: 0;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border: none;
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 0.8rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(168, 85, 247, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .status-badge {
+            font-size: 0.8rem;
+            padding: 0.3rem 0.6rem;
+            border-radius: 1rem;
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        th {
+            text-align: left;
+            color: #94a3b8;
+            padding: 0.8rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        td {
+            padding: 0.8rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .plot-container {
+            width: 100%;
+            height: 400px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 1rem;
+            margin-top: 1rem;
+        }
+
+        .json-res {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1rem;
+            border-radius: 0.8rem;
+            font-family: monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            color: #4ade80;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="navbar">
+        <div
+            style="font-size: 1.5rem; font-weight: 600; background: linear-gradient(to right, #818cf8, #d8b4fe); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+            DataScience API Dashboard
+        </div>
+        <div id="active-dataset" class="status-badge">Aucun Dataset</div>
+    </div>
+
+    <div class="container">
+        <div class="grid">
+            <div class="sidebar">
+                <div class="nav-item active" onclick="showSection('home', event)">Accueil</div>
+                <div class="nav-item" onclick="showSection('tp1', event)">TP1: EDA</div>
+                <div class="nav-item" onclick="showSection('tp2', event)">TP2: Nettoyage</div>
+                <div class="nav-item" onclick="showSection('tp3', event)">TP3: Analyse MV</div>
+                <div class="nav-item" onclick="showSection('tp4', event)">TP4: ML Base</div>
+                <div class="nav-item" onclick="showSection('tp5', event)">TP5: ML Avancé</div>
+            </div>
+
+            <div class="content">
+                <!-- Accueil -->
+                <div id="home" class="section active">
+                    <div class="card">
+                        <h2>Génération du Dataset</h2>
+                        <p>Commencez par générer un échantillon de données pour travailler sur les différents modules.
+                        </p>
+                        <div style="display: flex; gap: 1rem; align-items: center; margin-top: 1.5rem;">
+                            <select id="gen-phase">
+                                <option value="clean">Phase: Clean (TP1-TP2)</option>
+                                <option value="mv">Phase: Multivariée (TP3)</option>
+                                <option value="ml">Phase: Machine Learning (TP4-TP5)</option>
+                            </select>
+                            <button class="btn" onclick="generateDataset(event)">Générer Nouveau Dataset</button>
+                        </div>
+                        <div id="gen-status" style="margin-top: 1rem; font-style: italic; color: #94a3b8;"></div>
+                    </div>
+                </div>
+
+                <!-- TP1 EDA -->
+                <div id="tp1" class="section">
+                    <div class="card" id="eda-summary-card">
+                        <h2>Analyse Exploratoire (EDA)</h2>
+                        <button class="btn" onclick="getEDASummary(event)">Charger le Résumé</button>
+                        <div id="eda-res" style="margin-top: 2rem;"></div>
+                    </div>
+                    <div class="card">
+                        <h2>Visualisations</h2>
+                        <button class="btn" onclick="getEDAPlots(event)">Afficher les Graphiques</button>
+                        <div id="eda-plots" class="plot-container"></div>
+                    </div>
+                </div>
+
+                <!-- TP2 Cleaning -->
+                <div id="tp2" class="section">
+                    <div class="card">
+                        <h2>Prétraitement (Cleaning)</h2>
+                        <p>Détecte et traite les valeurs manquantes, les types mixtes et les outliers.</p>
+                        <div style="margin-top: 1.5rem;">
+                            <button class="btn" onclick="fitCleaner(event)">1. Entraîner le Nettoyeur (Fit)</button>
+                            <button class="btn" id="btn-transform" onclick="transformDataset(event)"
+                                style="margin-left: 1rem;" disabled>2. Appliquer les Changements (Transform)</button>
+                        </div>
+                        <div id="clean-status" style="margin-top: 1rem; font-style: italic; color: #94a3b8;"></div>
+                        <div id="clean-report" style="margin-top: 2rem;"></div>
+                    </div>
+                </div>
+
+                <!-- TP3 Multivariate -->
+                <div id="tp3" class="section">
+                    <div class="card">
+                        <h2>Analyse Multivariée (PCA & KMeans)</h2>
+                        <button class="btn" onclick="runPCA(event)">Lancer l'Analyse</button>
+                        <div id="mv-plots" class="plot-container"></div>
+                        <div id="mv-res" style="margin-top: 1rem;"></div>
+                    </div>
+                </div>
+
+                <!-- TP4 ML -->
+                <div id="tp4" class="section">
+                    <div class="card">
+                        <h2>Entraînement de Modèles</h2>
+                        <p>Comparaison entre Baseline et Optimisation.</p>
+                        <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+                            <button class="btn" onclick="trainML('logreg', event)">Baseline (Logistic
+                                Regression)</button>
+                            <button class="btn" onclick="tuneML(event)">Optimisation (Random Forest GridSearch)</button>
+                        </div>
+                        <div id="ml-status" style="margin-top: 1rem; font-style: italic; color: #94a3b8;"></div>
+                        <div id="ml-res" style="margin-top: 2rem;"></div>
+                    </div>
+                </div>
+
+                <!-- TP5 Advanced -->
+                <div id="tp5" class="section">
+                    <div class="card">
+                        <h2>Interprétabilité (Explainability)</h2>
+                        <p>Comprendre pourquoi le modèle a pris une décision.</p>
+                        <div style="margin-top: 1.5rem;">
+                            <button class="btn" onclick="explainInstance(event)">Expliquer une instance
+                                aléatoire</button>
+                        </div>
+                        <div id="ml2-status" style="margin-top: 1rem; font-style: italic; color: #94a3b8;"></div>
+                        <div id="ml2-plots" class="plot-container"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentDatasetId = "";
+        let currentCleanerId = "";
+        let currentModelId = "";
+
+        function showSection(id, event) {
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            if (event && event.target && event.target.classList.contains('nav-item')) {
+                event.target.classList.add('active');
+            }
+        }
+
+        async function fetchData(url, body) {
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            if (!res.ok) throw new Error("HTTP " + res.status);
+            return await res.json();
+        }
+
+        // TP Accueil
+        async function generateDataset(event) {
+            const btn = event.target;
+            const status = document.getElementById('gen-status');
+            btn.disabled = true;
+            status.innerText = "Génération du dataset en cours...";
+            try {
+                const phase = document.getElementById('gen-phase').value;
+                const data = await fetchData('/dataset/generate', { phase: phase, n: 300 });
+                currentDatasetId = data.dataset_id;
+                document.getElementById('active-dataset').innerText = "ID: " + currentDatasetId.substring(0, 8) + "...";
+                status.innerText = "Dataset généré ! ID: " + currentDatasetId;
+                alert("Dataset généré pour la phase: " + phase);
+            } catch (e) {
+                status.innerText = "Erreur: " + e.message;
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        // TP1 EDA
+        async function getEDASummary(event) {
+            if (!currentDatasetId) return alert("Générez un dataset d'abord !");
+            const res = await fetchData('/eda/summary', { meta: { dataset_id: currentDatasetId } });
+            let html = "<h3>Statistiques Descriptives</h3><table><tr><th>Variable</th><th>Moyenne</th><th>Std</th><th>Manquants</th></tr>";
+            for (let col in res.result.summary) {
+                const stats = res.result.summary[col];
+                html += `<tr><td><b>${col}</b></td><td>${stats.mean.toFixed(2)}</td><td>${stats.std.toFixed(2)}</td><td>${(res.result.missing_rate[col] * 100).toFixed(1)}%</td></tr>`;
+            }
+            html += "</table>";
+            document.getElementById('eda-res').innerHTML = html;
+        }
+
+        async function getEDAPlots(event) {
+            if (!currentDatasetId) return alert("Générez un dataset d'abord !");
+            const res = await fetchData('/eda/plots', { meta: { dataset_id: currentDatasetId } });
+            const arts = res.artifacts;
+            let traces = [];
+            for (let col in arts.histograms) {
+                traces.push({ x: arts.histograms[col], type: 'histogram', name: col, opacity: 0.6 });
+            }
+            Plotly.newPlot('eda-plots', traces, {
+                title: 'Distributions des variables',
+                paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', font: { color: '#fff' }, barmode: 'overlay'
+            });
+        }
+
+        // TP2 Cleaning
+        async function fitCleaner(event) {
+            if (!currentDatasetId) return alert("Générez un dataset d'abord !");
+            const status = document.getElementById('clean-status');
+            status.innerText = "Analyse et entraînement du pipeline de nettoyage...";
+            try {
+                const res = await fetchData('/clean/fit', {
+                    dataset_id: currentDatasetId,
+                    params: { strategy: "mean", handle_outliers: true }
+                });
+                currentCleanerId = res.cleaner_id;
+                document.getElementById('btn-transform').disabled = false;
+                status.innerText = "Cleaner entraîné !";
+                let html = "<h3>Rapport de Qualité (Avant)</h3><table><tr><th>Colonne</th><th>Type</th><th>Manquants</th><th>Outliers</th></tr>";
+                const report = res.report;
+                for (let col in report.types) {
+                    html += `<tr><td>${col}</td><td>${report.types[col]}</td><td>${report.missing_values[col]}</td><td>${report.outliers[col] || 0}</td></tr>`;
+                }
+                html += "</table>";
+                document.getElementById('clean-report').innerHTML = html;
+            } catch (e) {
+                status.innerText = "Erreur: " + e.message;
+            }
+        }
+
+        async function transformDataset(event) {
+            if (!currentCleanerId) return alert("Lancez le Fit d'abord !");
+            const status = document.getElementById('clean-status');
+            status.innerText = "Application du nettoyage...";
+            try {
+                const res = await fetchData('/clean/transform', { dataset_id: currentDatasetId, cleaner_id: currentCleanerId });
+                currentDatasetId = res.dataset_id;
+                document.getElementById('active-dataset').innerText = "ID: " + currentDatasetId.substring(0, 8) + "...";
+                status.innerText = "Données nettoyées ! (Nouvel ID: " + currentDatasetId.substring(0, 8) + ")";
+                alert("Le dataset a été nettoyé et mis à jour.");
+            } catch (e) {
+                status.innerText = "Erreur: " + e.message;
+            }
+        }
+
+        // TP3 MV
+        async function runPCA(event) {
+            if (!currentDatasetId) return alert("Générez un dataset d'abord !");
+            const res = await fetchData('/mv/pca', { dataset_id: currentDatasetId, n_components: 2 });
+            const proj = res.projection;
+            const trace = {
+                x: proj.map(p => p.PC1), y: proj.map(p => p.PC2),
+                mode: 'markers', type: 'scatter', marker: { color: 'var(--primary)', size: 8 }
+            };
+            Plotly.newPlot('mv-plots', [trace], {
+                title: 'Analyse en Composantes Principales (PCA)',
+                paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', font: { color: '#fff' }
+            });
+        }
+
+        // TP4 ML
+        async function trainML(model, event) {
+            if (!currentDatasetId) return alert("Générez un dataset d'abord !");
+            const status = document.getElementById('ml-status');
+            status.innerText = "Entraînement du modèle " + model + "...";
+            try {
+                const res = await fetchData('/ml/train', {
+                    dataset_id: currentDatasetId, target: "target", model_type: model
+                });
+                currentModelId = res.model_id;
+                status.innerText = "Modèle entraîné !";
+                document.getElementById('ml-res').innerHTML = `
+                <div class="card" style="background: rgba(34, 197, 94, 0.1)">
+                    <h4>Métriques du modèle (${model})</h4>
+                    <p><b>Exactitude:</b> ${(res.metrics.accuracy * 100).toFixed(2)}%</p>
+                    <p><b>AUC:</b> ${res.metrics.roc_auc ? res.metrics.roc_auc.toFixed(3) : "N/A"}</p>
+                    <p style="font-size: 0.8rem">ID Modèle: ${res.model_id}</p>
+                </div>`;
+            } catch (e) {
+                status.innerText = "Erreur: " + e.message;
+            }
+        }
+
+        async function tuneML(event) {
+            if (!currentDatasetId) return alert("Générez un dataset d'abord !");
+            const status = document.getElementById('ml-status');
+            status.innerText = "Grid Search / Optimization en cours...";
+            try {
+                const res = await fetchData('/ml2/tune', { dataset_id: currentDatasetId, target: "target" });
+                currentModelId = res.best_model_id;
+                status.innerText = "Optimisation terminée !";
+                const bestScore = res.cv_results_summary[0] ? res.cv_results_summary[0].mean_test_score : "N/A";
+                document.getElementById('ml-res').innerHTML = `
+                <div class="card" style="background: rgba(168, 85, 247, 0.1)">
+                    <h4>Résultats de l'Optimisation</h4>
+                    <p><b>Meilleurs Paramètres:</b> ${JSON.stringify(res.best_params)}</p>
+                    <p><b>Meilleur Score CV:</b> ${typeof bestScore === 'number' ? bestScore.toFixed(3) : bestScore}</p>
+                    <p style="font-size: 0.8rem">ID Modèle: ${res.best_model_id}</p>
+                </div>`;
+            } catch (e) {
+                status.innerText = "Erreur: " + e.message;
+            }
+        }
+
+        // TP5 ML2 Explain
+        async function explainInstance(event) {
+            if (!currentModelId) return alert("Entraînez un modèle (TP4) d'abord !");
+            const status = document.getElementById('ml2-status');
+            status.innerText = "Génération de l'explication locale...";
+            try {
+                // Sample dummy data based on common project structure
+                const instance = { x1: 0.5, x2: 1.2, x3: -0.8, x4: 0.1, x5: 0.9, x6: -1.5, segment: "A" };
+                const res = await fetchData('/ml2/explain', { model_id: currentModelId, data: instance });
+                status.innerText = "Explication générée.";
+
+                const explanation = res;
+                const trace = {
+                    x: explanation.map(e => e.contribution),
+                    y: explanation.map(e => e.feature),
+                    type: 'bar', orientation: 'h',
+                    marker: { color: explanation.map(e => e.contribution > 0 ? '#4ade80' : '#f87171') }
+                };
+                Plotly.newPlot('ml2-plots', [trace], {
+                    title: 'Impact des variables sur la prédiction (Local)',
+                    paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', font: { color: '#fff' },
+                    margin: { l: 150 }
+                });
+            } catch (e) {
+                status.innerText = "Erreur: " + e.message;
+            }
+        }
+    </script>
+
+</body>
+
+</html>
